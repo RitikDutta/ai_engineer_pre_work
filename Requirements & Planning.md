@@ -1,4 +1,17 @@
-# Brainstorming
+# Requirements
+
+
+
+
+
+
+
+
+
+
+
+
+# Brainstorming/Planning
 
 simple description
 
@@ -21,4 +34,3 @@ things we can use
 
 ## Backend 
 #### here we will use python as backend which works best connecting with most of the LLMs and works great with Flask
- 
