@@ -1,2 +1,3 @@
 env/
 .directory
+__pycache__/my_assistant.cpython-39.pyc
