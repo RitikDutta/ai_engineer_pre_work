@@ -1,10 +1,10 @@
 # Requirements
 
 ## Client Story
-### As a user i want to have an application that will be used to transcribe(converts my voice to text) my conversations, that could be meetings
-### After Transcription the application should summarize the conversations(transcriptions) in a nice an systematic way
+#### As a user i want to have an application that will be used to transcribe(converts my voice to text) my conversations, that could be meetings
+#### After Transcription the application should summarize the conversations(transcriptions) in a nice an systematic way
 ### after the summerization i should see both raw transcriptions and summarized text
-### thers is a similar app availeble called NotePen.
+#### thers is a similar app availeble called NotePen.
 
 
 # Brainstorming/Planning
