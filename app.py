@@ -6,7 +6,7 @@ def index():
     if request.method == 'POST':
         transcript = request.form['transcript']
         print(transcript)
-    return render_template('index.html')
+    return render_template('index.html', summary = transcript)
 
 
 if __name__ == '__main__':
