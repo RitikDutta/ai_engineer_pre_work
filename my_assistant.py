@@ -2,11 +2,14 @@ import base64
 import os
 from google import genai
 from google.genai import types
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class MyAssistant:
     def generate(self, transcript: str) -> str:
         client = genai.Client(
-            api_key="AIzaSyDNOZ4XoQjFLPWMZ0cmIYc1w8nx3eYS8hg",
+            api_key=os.getenv("Gemini_api_key"),
         )
 
         model = "gemini-2.0-flash"
