@@ -6,8 +6,22 @@
     </head>
     <body>
         <h1>Transcription And Summerization</h1>
-        <textarea id="transcript" name="transcript" placeholder="Speech..."></textarea>
-        <button type="button" id="toggle-btn" class="button_r">Voice</button>
+        
+        <div class="textareas-container">
+            <div class="textarea-wrapper">
+                <label for="transcript">Transcription</label>
+                <textarea id="transcript" placeholder="Transcription Output..."></textarea>
+            </div>
+            <div class="textarea-wrapper">
+                <label for="summary">Summary</label>
+                <textarea id="summary" name="summary" placeholder="Summary Output..." readonly></textarea>
+            </div>
+        </div>
+
+        <div class="buttons-container">
+            <button type="button" id="toggle-btn">Record Voice</button>
+            <button type="button" id="summarize-btn">Summarize</button>
+        </div>
     
     
     
