@@ -3,6 +3,7 @@
     <head>
         <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
         <viewport content="width=device-width, initial-scale=1.0">
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     </head>
     <body>
         <h1>Transcription And Summerization</h1>
@@ -10,11 +11,17 @@
             <div class="textareas-container">
                 <div class="textarea-wrapper">
                     <label for="transcript">Transcription</label>
-                    <textarea id="transcript", name="transcript" placeholder="Transcription Output..."></textarea>
+                    <textarea id="transcript", name="transcript" placeholder="Transcription Output...">{{ request.form.transcript }}</textarea>
                 </div>
                 <div class="textarea-wrapper">
                     <label for="summary">Summary</label>
                     <textarea id="summary" name="summary" placeholder="Summary Output..." readonly>{{summary}}</textarea>
+                    <div id="summary-output">
+                        <!-- rendered summary will appear here -->
+                        {% if not summary %}
+                            <span style="color: #999;">Summary Output...</span> <!-- Show placeholder text if no summary -->
+                        {% endif %}
+                    </div>
                 </div>
             </div>
     
@@ -50,7 +57,7 @@
                     recognizer.stop();
                     toggleBtn.textContent = "Not Listening";
                     toggleBtn.classList.remove("recording");
-                    // Add a space when stopping the recognition
+                    // add a space when stopping the recognition
                     finalTranscript += " ";
                 }
                 isRecording = !isRecording;
@@ -73,6 +80,25 @@
                 console.error("Speech recognition error", event.error);
             };
         </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const summaryTextarea = document.getElementById('summary');
+                const summaryOutputDiv = document.getElementById('summary-output');
 
+                if (summaryTextarea && summaryTextarea.value.trim() !== '') {
+                    const markdownContent = summaryTextarea.value;
+
+                    marked.setOptions({
+                      breaks: true // convert single newlines in paragraphs into <br> tags
+                    });
+
+
+                    // use marked.js to convert Markdown to HTML
+                    const renderedHtml = marked.parse(markdownContent);
+
+                    summaryOutputDiv.innerHTML = renderedHtml;
+                }
+            });
+        </script>
     </body>
 </html>
