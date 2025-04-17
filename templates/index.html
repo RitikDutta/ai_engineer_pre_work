@@ -3,4 +3,59 @@
     <head></head>
     <body>
         <h1>Base Temp</h1>
+        <textarea id="transcript" name="transcript" placeholder="Speech..."></textarea>
+        <button type="button" id="toggle-btn" class="button_r">Voice</button>
+    
+    
+    
+    
+        <!-- speech recognition -->
+        <script>
+            let toggleBtn = document.getElementById("toggle-btn");
+            let textarea = document.getElementById("transcript");
+            let isRecording = false;
+            let speechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+            let recognizer = new speechRecognition();
+            recognizer.lang = "en-US";
+
+            // recognizer.lang = "hi";
+
+            recognizer.continuous = true;
+            recognizer.interimResults = true;
+
+            let finalTranscript = "";
+
+            toggleBtn.addEventListener("click", function() {
+                if (!isRecording) {
+                    recognizer.start();
+                    toggleBtn.textContent = "Listening";
+                    toggleBtn.classList.add("recording");
+                } else {
+                    recognizer.stop();
+                    toggleBtn.textContent = "Not Listening";
+                    toggleBtn.classList.remove("recording");
+                    // Add a space when stopping the recognition
+                    finalTranscript += " ";
+                }
+                isRecording = !isRecording;
+            });
+
+            recognizer.onresult = function(event) {
+                let interimTranscript = "";
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    let transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript;
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+                textarea.value = finalTranscript + interimTranscript;
+            };
+
+            recognizer.onerror = function(event) {
+                console.error("Speech recognition error", event.error);
+            };
+        </script>
+    </body>
 </html>
