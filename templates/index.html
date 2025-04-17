@@ -14,7 +14,7 @@
                 </div>
                 <div class="textarea-wrapper">
                     <label for="summary">Summary</label>
-                    <textarea id="summary" name="summary" placeholder="Summary Output..." readonly></textarea>
+                    <textarea id="summary" name="summary" placeholder="Summary Output..." readonly>{{summary}}</textarea>
                 </div>
             </div>
     
@@ -23,7 +23,6 @@
                 <button type="submit" id="submit-btn" value="Submit">Summarize</button>
             </div>
         </form>
-        <h1>{{summary}}</h1>
     
     
         <!-- speech recognition -->
@@ -74,5 +73,6 @@
                 console.error("Speech recognition error", event.error);
             };
         </script>
+
     </body>
 </html>
