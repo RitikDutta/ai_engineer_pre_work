@@ -65,7 +65,7 @@ Try it out instantly—no setup required:
 1. **Clone the repo**  
    ```bash
    git clone https://github.com/RitikDutta/ai_engineer_pre_work.git
-   cd speech‑to‑summary
+   cd ai_engineer_pre_work
    ```
 
 2. **Install dependencies**  
