@@ -32,3 +32,9 @@ things we can use
 
 ## Backend 
 #### here we will use python as backend which works best connecting with most of the LLMs and works great with Flask
+
+
+
+## version 2 
+### as we have seen the applicaiton is not working in different browser but working fine in google chrome because of no speech to text support in other browsers, so we need to generate the transcription in backend as well 
+### here we can use whisper model 
