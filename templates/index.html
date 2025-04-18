@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-        <viewport content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     </head>
     <body>
@@ -24,14 +24,15 @@
                     </div>
                 </div>
             </div>
-    
+
             <div class="buttons-container">
                 <button type="button" id="toggle-btn">Record Voice</button>
                 <button type="submit" id="submit-btn" value="Submit">Summarize</button>
             </div>
         </form>
-    
-    
+
+
+        <!-- UPDATE Fixed auto stop of the speech recognition by browser fallback mode -->
         <!-- speech recognition -->
         <script>
             let toggleBtn = document.getElementById("toggle-btn");
@@ -40,37 +41,48 @@
             let speechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
             let recognizer = new speechRecognition();
             recognizer.lang = "en-US";
-
+            
             // recognizer.lang = "hi";
-
+            
             recognizer.continuous = true;
             recognizer.interimResults = true;
-
+            
             let finalTranscript = "";
-
+            
             toggleBtn.addEventListener("click", function() {
                 if (!isRecording) {
-                    recognizer.start();
-                    toggleBtn.textContent = "Listening";
-                    toggleBtn.classList.add("recording");
+                    finalTranscript = textarea.value; // Keep existing text
+                    if (finalTranscript.length > 0 && !/\s$/.test(finalTranscript)) {
+                            finalTranscript += " ";
+                    }
+                    try {
+                        recognizer.start();
+                        // State update handled by onstart
+                    } catch (e) {
+                        console.error("Error starting recognition:", e);
+                        isRecording = false; // Ensure state is correct
+                    }
                 } else {
+                    isRecording = false; // Signal manual stop *before* calling stop()
                     recognizer.stop();
-                    toggleBtn.textContent = "Not Listening";
-                    toggleBtn.classList.remove("recording");
-                    // add a space when stopping the recognition
-                    finalTranscript += " ";
+                    // State update handled by onend
                 }
-                isRecording = !isRecording;
             });
+
+            recognizer.onstart = function() {
+                isRecording = true;
+                toggleBtn.textContent = "Stop Listening";
+                toggleBtn.classList.add("recording");
+            };
 
             recognizer.onresult = function(event) {
                 let interimTranscript = "";
                 for (let i = event.resultIndex; i < event.results.length; i++) {
-                    let transcript = event.results[i][0].transcript;
+                    let transcriptPart = event.results[i][0].transcript;
                     if (event.results[i].isFinal) {
-                        finalTranscript += transcript;
+                        finalTranscript += transcriptPart + ' '; // Add space after final part
                     } else {
-                        interimTranscript += transcript;
+                        interimTranscript += transcriptPart;
                     }
                 }
                 textarea.value = finalTranscript + interimTranscript;
@@ -78,6 +90,37 @@
 
             recognizer.onerror = function(event) {
                 console.error("Speech recognition error", event.error);
+
+                if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                    isRecording = false;
+                }
+                if (isRecording) {
+                    toggleBtn.textContent = "Record Voice";
+                    toggleBtn.classList.remove("recording");
+                }
+            };
+
+            recognizer.onend = function() {
+                if (isRecording) {
+                    console.log("Recognition service ended, restarting...");
+                    setTimeout(() => {
+                        try {
+                            if (isRecording) { // Double-check state before starting
+                                    recognizer.start();
+                            }
+                        } catch(e) {
+                            console.error("Error restarting recognition:", e);
+                            toggleBtn.textContent = "Record Voice";
+                            toggleBtn.classList.remove("recording");
+                            isRecording = false;
+                        }
+                    }, 250);
+                } else {
+                    // Manual stop
+                    toggleBtn.textContent = "Record Voice";
+                    toggleBtn.classList.remove("recording");
+                    finalTranscript = textarea.value; 
+                }
             };
         </script>
         <script>
