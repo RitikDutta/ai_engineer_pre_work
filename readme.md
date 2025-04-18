@@ -1,4 +1,3 @@
-```markdown
 # Speech‑to‑Summary App
 
 A simple web application that lets you speak, see the raw transcript in your browser, and get back a neat, structured summary powered by any LLM (OpenAI, Gemini, Claude, etc.).
@@ -100,8 +99,6 @@ Try it out instantly—no setup required:
 5. Review, copy, or start another recording.  
 
 ---
-```
-
 
 ## Documentation
 
