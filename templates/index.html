@@ -1,22 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
+        <meta charset="UTF-8">
         <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     </head>
     <body>
         <h1>Transcription And Summarization</h1>
-        <form method="post" id="response-form" enctype="multipart/form-data">
+        <form method="post" id="response-form">
             <div class="textareas-container">
                 <div class="textarea-wrapper">
                     <label for="transcript">Transcription</label>
                     <textarea id="transcript", name="transcript" placeholder="Transcription Output...">{{ request.form.transcript }}</textarea>
+                    <div id="status" style="font-size:0.9em; min-height:1.2em;"></div>
                 </div>
                 <div class="textarea-wrapper">
                     <label for="summary">Summary</label>
                     <textarea id="summary" name="summary" placeholder="Summary Output..." readonly>{{summary}}</textarea>
-                    <div id="summary-output">
+                     <div id="summary-output">
                         <!-- rendered summary will appear here -->
                         {% if not summary %}
                             <span style="color: #999;">Summary Output...</span> <!-- Show placeholder text if no summary -->
@@ -39,114 +41,124 @@
         <!-- UPDATE Fixed auto stop of the speech recognition by browser fallback mode -->
         <!-- speech recognition -->
         <script>
-            let toggleBtn = document.getElementById("toggle-btn");
-            let textarea = document.getElementById("transcript");
+            const toggleBtn = document.getElementById("toggle-btn");
+            const transcriptTextarea = document.getElementById("transcript");
+            const submitBtn = document.getElementById("submit-btn");
+            const statusDiv = document.getElementById("status");
+
             let isRecording = false;
-            let speechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
-            let recognizer = new speechRecognition();
-            recognizer.lang = "en-US";
-            
-            // recognizer.lang = "hi";
-            
-            recognizer.continuous = true;
-            recognizer.interimResults = true;
-            
-            let finalTranscript = "";
-            
-            toggleBtn.addEventListener("click", function() {
+            let mediaRecorder;
+            let audioChunks = [];
+            let audioStream;
+
+            // Basic API Check
+            if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+                toggleBtn.disabled = true;
+                toggleBtn.textContent = "Not Supported";
+                statusDiv.textContent = "Audio recording not supported.";
+            }
+
+            async function startRecording() {
+                try {
+                    audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    isRecording = true;
+                    toggleBtn.textContent = "Stop Recording";
+                    submitBtn.disabled = true;
+                    statusDiv.textContent = "Recording..."; // Minimal status
+                    audioChunks = [];
+                    mediaRecorder = new MediaRecorder(audioStream, { mimeType: 'audio/webm' }); // Default mime type
+
+                    mediaRecorder.ondataavailable = event => {
+                        if (event.data.size > 0) audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        sendAudioToServer(audioBlob);
+                        if (audioStream) audioStream.getTracks().forEach(track => track.stop());
+                    };
+
+                    mediaRecorder.onerror = (event) => { // Minimal error handling
+                       console.error("Recorder Error:", event.error?.name);
+                       statusDiv.textContent = "Recording Error.";
+                       resetRecordingState();
+                    };
+
+                    mediaRecorder.start();
+                } catch (err) {
+                    console.error("Mic Error:", err.name);
+                    statusDiv.textContent = "Mic Access Error.";
+                    resetRecordingState();
+                }
+            }
+
+            function stopRecording() {
+                if (mediaRecorder?.state === 'recording') {
+                    mediaRecorder.stop();
+                } else { // Reset if stop is pressed unexpectedly
+                    resetRecordingState();
+                }
+            }
+
+            function resetRecordingState() {
+                 isRecording = false;
+                 toggleBtn.textContent = "Record Voice";
+                 toggleBtn.disabled = false; // Ensure enabled
+                 submitBtn.disabled = false; // Re-enable summarize
+                 if (statusDiv.textContent.endsWith("...")) { // Clear only active messages
+                    statusDiv.textContent = "";
+                 }
+                 if (audioStream) audioStream.getTracks().forEach(track => track.stop()); // Ensure stream stops
+            }
+
+            async function sendAudioToServer(blob) {
+                statusDiv.textContent = "Processing..."; // Minimal status
+                const formData = new FormData();
+                formData.append('audio_blob', blob, 'recording.webm');
+
+                try {
+                    // Replace with your actual Flask endpoint
+                    const response = await fetch('/upload_audio', { method: 'POST', body: formData });
+                    const responseText = await response.text(); // Expect plain text
+
+                    if (response.ok) {
+                        transcriptTextarea.value = responseText; 
+                        statusDiv.textContent = ""; 
+                    } else {
+                        console.error('Server Error:', response.status, responseText);
+                        transcriptTextarea.value = `Server Error: ${response.status}`; // Show error in textarea
+                        statusDiv.textContent = "Server Error."; 
+                    }
+                } catch (err) {
+                    console.error('Network Error:', err);
+                    transcriptTextarea.value = "Network Error sending audio.";
+                    statusDiv.textContent = "Network Error."; 
+                } finally {
+                    resetRecordingState(); 
+                }
+            }
+
+            // Button click handler
+            toggleBtn.addEventListener("click", () => {
                 if (!isRecording) {
-                    finalTranscript = textarea.value; // Keep existing text
-                    if (finalTranscript.length > 0 && !/\s$/.test(finalTranscript)) {
-                            finalTranscript += " ";
-                    }
-                    try {
-                        recognizer.start();
-                        // State update handled by onstart
-                    } catch (e) {
-                        console.error("Error starting recognition:", e);
-                        isRecording = false; // Ensure state is correct
-                    }
+                    startRecording();
                 } else {
-                    isRecording = false; // Signal manual stop *before* calling stop()
-                    recognizer.stop();
-                    // State update handled by onend
+                    stopRecording();
                 }
             });
-
-            recognizer.onstart = function() {
-                isRecording = true;
-                toggleBtn.textContent = "Stop Listening";
-                toggleBtn.classList.add("recording");
-            };
-
-            recognizer.onresult = function(event) {
-                let interimTranscript = "";
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    let transcriptPart = event.results[i][0].transcript;
-                    if (event.results[i].isFinal) {
-                        finalTranscript += transcriptPart + ' '; // Add space after final part
-                    } else {
-                        interimTranscript += transcriptPart;
-                    }
-                }
-                textarea.value = finalTranscript + interimTranscript;
-            };
-
-            recognizer.onerror = function(event) {
-                console.error("Speech recognition error", event.error);
-
-                if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-                    isRecording = false;
-                }
-                if (isRecording) {
-                    toggleBtn.textContent = "Record Voice";
-                    toggleBtn.classList.remove("recording");
-                }
-            };
-
-            recognizer.onend = function() {
-                if (isRecording) {
-                    console.log("Recognition service ended, restarting...");
-                    setTimeout(() => {
-                        try {
-                            if (isRecording) { // Double-check state before starting
-                                    recognizer.start();
-                            }
-                        } catch(e) {
-                            console.error("Error restarting recognition:", e);
-                            toggleBtn.textContent = "Record Voice";
-                            toggleBtn.classList.remove("recording");
-                            isRecording = false;
-                        }
-                    }, 250);
-                } else {
-                    // Manual stop
-                    toggleBtn.textContent = "Record Voice";
-                    toggleBtn.classList.remove("recording");
-                    finalTranscript = textarea.value; 
-                }
-            };
         </script>
+
+        <!-- Existing Markdown rendering script -->
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 const summaryTextarea = document.getElementById('summary');
                 const summaryOutputDiv = document.getElementById('summary-output');
-
                 if (summaryTextarea && summaryTextarea.value.trim() !== '') {
-                    const markdownContent = summaryTextarea.value;
-
-                    marked.setOptions({
-                      breaks: true // convert single newlines in paragraphs into <br> tags
-                    });
-
-
-                    // use marked.js to convert Markdown to HTML
-                    const renderedHtml = marked.parse(markdownContent);
-
-                    summaryOutputDiv.innerHTML = renderedHtml;
+                    marked.setOptions({ breaks: true, gfm: true });
+                    summaryOutputDiv.innerHTML = marked.parse(summaryTextarea.value);
                 }
             });
         </script>
-        
+
     </body>
 </html>
