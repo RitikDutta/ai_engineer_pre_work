@@ -68,14 +68,20 @@ Try it out instantly—no setup required:
    cd ai_engineer_pre_work
    ```
 
-2. **Install dependencies**  
+2. **Create and activate env**  
+   ```bash
+   python -m venv venv
+   source venv/bin/activate
+   ```
+
+3. **Install dependencies**  
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Note:** The `.env` file is already populated with the API key and tracked in this repo for testing purposes.
+4. **Note:** The `.env` file is already populated with the API key and tracked in this repo for testing purposes.
 
-4. If u want to add .env yourself u can add .env file in root dir of project and add the variable 
+5. If u want to add .env yourself u can add .env file in root dir of project and add the variable 
     Gemini_api_key=<API_KEY>
 
 
