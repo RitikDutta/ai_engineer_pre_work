@@ -2,11 +2,14 @@ import os
 from flask import Flask, request, render_template
 from faster_whisper import WhisperModel # Import the WhisperModel class
 from my_assistant import MyAssistant
+import tempfile
+
 
 # --- Flask App Setup ---
 app = Flask(__name__)
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = os.path.join(tempfile.gettempdir(), 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 model_size = "tiny.en" # Or "base.en" for slightly better accuracy
 
@@ -25,13 +28,24 @@ except Exception as e:
 @app.route('/', methods=['GET', 'POST'])
 def index():
     Assistant = MyAssistant()
-    transcript = ''
+    transcript_from_form = ''
     summary = ''
+
     if request.method == 'POST':
-        transcript = request.form['transcript']
-        print(transcript)
-        summary = Assistant.generate(transcript)
-    return render_template('index.html', summary=summary)
+        transcript_from_form = request.form.get('transcript', '') 
+        if transcript_from_form:
+            print("--- Transcript received at '/' for summarization ---")
+            print(transcript_from_form)
+            print("-----------------------------------------------------")
+            summary = Assistant.generate(transcript_from_form)
+            print(f"Generated Summary: {summary[:100]}...")
+        else:
+             print("--- POST request to '/' received, but 'transcript' data was empty. ---")
+
+    return render_template('index.html',
+                           summary=summary,
+                           transcript=transcript_from_form) # pass the received transcript back
+
 
 @app.route('/upload_audio', methods=['POST'])
 def upload_audio():
