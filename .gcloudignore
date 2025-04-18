@@ -12,6 +12,12 @@
 # below:
 .git
 .gitignore
+venv/
+*.pyc
+__pycache__/
+.DS_Store
+*.log
+
 
 # Python pycache:
 __pycache__/
