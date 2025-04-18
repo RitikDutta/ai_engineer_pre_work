@@ -105,6 +105,6 @@ Try it out instantly—no setup required:
 These files are located in the `docs/` folder:
 
 - [Requirements & Planning](docs/Requirements%20%26%20Planning.md) – Contains user stories and the overall project planning.  
-- [High‑Level Design (HLD)](docs/HLD.md) – Outlines the major system components and their interactions.  
-- [Low‑Level Design (LLD)](docs/LLD.md) – Details module-level designs, APIs, and data structures.  
+- [High‑Level Design (HLD)](docs/HLD.pdf) – Outlines the major system components and their interactions.  
+- [Low‑Level Design (LLD)](docs/LLD.pdf) – Details module-level designs, APIs, and data structures.  
 - [Architecture Diagram](docs/Architecture.pdf) – Visual overview of the end-to-end application workflow.  
