@@ -58,10 +58,14 @@ def upload_audio():
             full_transcript = "".join(segment.text for segment in segments).strip()
 
             print(f"Transcription: {full_transcript}")
+            #  delete the file after processing
+            os.remove(save_path)
             return full_transcript, 200 # Return plain text transcript
 
         except Exception as e:
             print(f"Error during transcription: {e}")
+            # delete file on error
+            if os.path.exists(save_path): os.remove(save_path)
             return f"Error during transcription: {e}", 500
 
     except Exception as e:
